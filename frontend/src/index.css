@@ -3,5 +3,5 @@
 html, body { height: 100%; /* ensure they cover full viewport */ 
   margin: 0; /* remove default margin */ 
   background-color: black; /* set background to black */
-  margin: 10px;
+  margin: 5px;
   }

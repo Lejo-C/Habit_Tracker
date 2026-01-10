@@ -9,16 +9,14 @@ function App() {
   return (
     <Router>
 
-      <nav className='text-white flex'>
-        <h1 className='font-bold'>
-          Habit Tracker
-        </h1>
+     <nav className="text-white flex items-center bg-black p-4">
+  <h1 className="font-bold mr-auto">Habit Tracker</h1>
 
-        <div>
-          <a href="">Home</a>
-          <a href="">About</a>
-        </div>
-      </nav>
+  <div className="flex flex-1 justify-center gap-4">
+    <a href="/" className="hover:text-blue-400">Home</a>
+    <a href="/about" className="hover:text-blue-400">About</a>
+  </div>
+</nav>
 
       <Routes>
         <Route path="/" element={<Home />} />
