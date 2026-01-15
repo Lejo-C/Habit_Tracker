@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
+import { AuthContext } from '../context/AuthContext';
+import client from '../api/client';
 
 const Toggle = ({ enabled, onChange }) => (
     <div
@@ -19,9 +21,33 @@ const SettingSection = ({ title, children }) => (
 );
 
 const Profile = () => {
+    const { user } = useContext(AuthContext);
+    const [profile, setProfile] = useState(user);
+    const [loading, setLoading] = useState(false);
+
+    // Settings State (Mocked mostly, as backend support for these is partial)
     const [emailNotif, setEmailNotif] = useState(true);
     const [pushNotif, setPushNotif] = useState(false);
-    const [singleDevice, setSingleDevice] = useState(true);
+
+    useEffect(() => {
+        if (user) setProfile(user);
+    }, [user]);
+
+    const handleUpdate = async () => {
+        // Basic update placeholder
+        setLoading(true);
+        try {
+            await client.put('/users/profile', { username: profile.username });
+            alert("Profile updated!");
+        } catch (e) {
+            console.error(e);
+            alert("Update failed");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (!profile) return <div>Loading...</div>;
 
     return (
         <div className="p-8 max-w-4xl mx-auto">
@@ -30,16 +56,28 @@ const Profile = () => {
             {/* User Header */}
             <div className="flex items-center gap-6 mb-10">
                 <div className="relative">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#333] to-[#111] border-2 border-[#00FF66] shadow-[0_0_20px_rgba(0,255,102,0.3)]"></div>
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#333] to-[#111] border-2 border-[#00FF66] shadow-[0_0_20px_rgba(0,255,102,0.3)] flex items-center justify-center text-4xl font-bold text-white">
+                        {profile.username.charAt(0).toUpperCase()}
+                    </div>
                     <div className="absolute bottom-0 right-0 bg-[#00FF66] text-black text-xs font-bold px-2 py-1 rounded-full border border-black">
-                        LVL 12
+                        LVL {profile.level || 1}
                     </div>
                 </div>
                 <div>
-                    <h2 className="text-2xl font-bold text-white">Neo Anderson</h2>
-                    <p className="text-gray-400">Premium Member • Joined 2024</p>
-                    <button className="mt-3 text-sm border border-[#333] bg-[#1a1a1a] text-white px-4 py-2 rounded-lg hover:border-[#00FF66] transition-colors">
-                        Edit Profile
+                    <h2 className="text-2xl font-bold text-white mb-1">
+                        <input
+                            className="bg-transparent border-b border-transparent hover:border-gray-500 focus:border-[#00FF66] focus:outline-none"
+                            value={profile.username}
+                            onChange={(e) => setProfile({ ...profile, username: e.target.value })}
+                        />
+                    </h2>
+                    <p className="text-gray-400">{profile.email}</p>
+                    <button
+                        onClick={handleUpdate}
+                        disabled={loading}
+                        className="mt-3 text-sm border border-[#333] bg-[#1a1a1a] text-white px-4 py-2 rounded-lg hover:border-[#00FF66] transition-colors"
+                    >
+                        {loading ? 'Saving...' : 'Save Changes'}
                     </button>
                 </div>
             </div>
@@ -62,13 +100,6 @@ const Profile = () => {
             </SettingSection>
 
             <SettingSection title="Security">
-                <div className="flex justify-between items-center">
-                    <div>
-                        <p className="text-white font-medium">Single Device Login</p>
-                        <p className="text-sm text-gray-400">Log out from other devices when signing in.</p>
-                    </div>
-                    <Toggle enabled={singleDevice} onChange={setSingleDevice} />
-                </div>
                 <div className="flex justify-between items-center pt-2">
                     <div>
                         <p className="text-white font-medium">Session Timeout</p>
@@ -79,17 +110,6 @@ const Profile = () => {
                         <option>1 hour</option>
                         <option>4 hours</option>
                     </select>
-                </div>
-            </SettingSection>
-
-            <SettingSection title="Integrations">
-                <div className="flex items-center gap-4">
-                    <button className="flex-1 bg-white text-black font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-100 transition-colors">
-                        <span>G</span> Connect Google
-                    </button>
-                    <button className="flex-1 bg-[#1a1a1a] text-white border border-[#333] font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-[#222] transition-colors">
-                        <span></span> Connect Apple
-                    </button>
                 </div>
             </SettingSection>
 

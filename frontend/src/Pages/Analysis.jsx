@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import client from '../api/client';
 
 const CircularProgress = ({ percentage, score }) => {
     const radius = 80;
@@ -42,9 +43,9 @@ const CircularProgress = ({ percentage, score }) => {
     );
 };
 
-const BarChart = () => (
+const BarChart = ({ data }) => (
     <div className="flex items-end gap-3 h-48 w-full mt-6">
-        {[40, 70, 45, 90, 60, 80, 50].map((h, i) => (
+        {data.map((h, i) => (
             <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
                 <div
                     className="w-full bg-[#1a1a1a] rounded-t-lg relative overflow-hidden group-hover:bg-[#1a1a1a]/80 transition-all"
@@ -62,6 +63,30 @@ const BarChart = () => (
 )
 
 const Analysis = () => {
+    const [stats, setStats] = useState({
+        score: 0,
+        weeklyData: [0, 0, 0, 0, 0, 0, 0],
+        totalHours: 0,
+        completionRate: 0,
+        streak: 0
+    });
+
+    useEffect(() => {
+        // Fetch habits to calculate analysis
+        client.get('/habits').then(res => {
+            const habits = res.data;
+            // Simple logic for demo
+            setStats({
+                score: habits.reduce((acc, h) => acc + h.streak * 10, 0),
+                // Just randomizing for "Weekly" since we don't have full history API yet
+                weeklyData: [20, 45, 60, 30, 80, 50, 90],
+                totalHours: habits.length * 5, // Mock
+                completionRate: 75, // Mock
+                streak: habits.reduce((acc, h) => Math.max(acc, h.streak), 0)
+            });
+        }).catch(console.error);
+    }, []);
+
     return (
         <div className="p-8 max-w-7xl mx-auto">
             <h1 className="text-3xl font-bold text-white mb-6">Productivity Analysis</h1>
@@ -71,17 +96,17 @@ const Analysis = () => {
                 {/* Productivity Score */}
                 <div className="bg-[#121212] border border-[#222] rounded-2xl p-8 flex flex-col items-center justify-center relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4">
-                        <span className="bg-[#1a1a1a] text-[#00FF66] px-3 py-1 rounded-full text-xs font-bold border border-[#333]">Excellent</span>
+                        <span className="bg-[#1a1a1a] text-[#00FF66] px-3 py-1 rounded-full text-xs font-bold border border-[#333]">Good</span>
                     </div>
-                    <CircularProgress percentage={85} score={850} />
-                    <p className="mt-6 text-gray-400 text-center text-sm">You are more productive than <span className="text-white font-bold">92%</span> of users this week.</p>
+                    <CircularProgress percentage={75} score={stats.score} />
+                    <p className="mt-6 text-gray-400 text-center text-sm">Your productivity score is based on your habits and streaks.</p>
                 </div>
 
                 {/* Weekly Completion Chart */}
                 <div className="bg-[#121212] border border-[#222] rounded-2xl p-6 lg:col-span-2">
                     <h3 className="text-lg font-bold text-white mb-1">Weekly Completion</h3>
                     <p className="text-xs text-gray-400">Habits completed vs scheduled</p>
-                    <BarChart />
+                    <BarChart data={stats.weeklyData} />
                 </div>
 
                 {/* Stats Grid */}
@@ -90,15 +115,15 @@ const Analysis = () => {
                     <div className="space-y-4">
                         <div className="flex justify-between items-center pb-4 border-b border-[#1a1a1a]">
                             <span className="text-gray-400">Total Hours</span>
-                            <span className="text-xl font-bold text-white">42.5h</span>
+                            <span className="text-xl font-bold text-white">{stats.totalHours}h</span>
                         </div>
                         <div className="flex justify-between items-center pb-4 border-b border-[#1a1a1a]">
-                            <span className="text-gray-400">Avg. Streak</span>
-                            <span className="text-xl font-bold text-[#00FF66]">14 days</span>
+                            <span className="text-gray-400">Best Streak</span>
+                            <span className="text-xl font-bold text-[#00FF66]">{stats.streak} days</span>
                         </div>
                         <div className="flex justify-between items-center">
                             <span className="text-gray-400">Completion Rate</span>
-                            <span className="text-xl font-bold text-white">88%</span>
+                            <span className="text-xl font-bold text-white">{stats.completionRate}%</span>
                         </div>
                     </div>
                 </div>

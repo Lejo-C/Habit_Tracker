@@ -26,6 +26,9 @@ const registerUser = async (req, res) => {
         const otp = generateOTP();
         const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
 
+        // DEV LOG: Since email might fail
+        console.log(`[DEV OTP] for ${email}: ${otp}`);
+
         const user = await User.create({
             username,
             email,
@@ -45,17 +48,18 @@ const registerUser = async (req, res) => {
                 message
             });
         } catch (err) {
-            console.error("Failed to send OTP email", err);
-            // Optionally delete user if email fails, or allow resend.
+            console.error("Failed to send OTP email (see console for code):", err.message);
+            // We do NOT delete the user, as they can still verify if we give them the code via other means (logs)
         }
 
         res.status(201).json({
             _id: user._id,
             username: user.username,
             email: user.email,
-            message: 'Registration successful. Please verify OTP sent to your email.'
+            message: 'Registration successful. If email failed, check server console for OTP.'
         });
     } catch (error) {
+        console.error("Register Error:", error);
         res.status(500).json({ message: error.message });
     }
 };
@@ -74,19 +78,32 @@ const verifyOTP = async (req, res) => {
         }
 
         if (user.isVerified) {
-            return res.status(400).json({ message: 'User already verified' });
+            // If already verified, return success + token
+            const token = generateToken(user._id);
+            return res.json({
+                _id: user._id,
+                username: user.username,
+                email: user.email,
+                token,
+                message: 'User already verified. Logging in.'
+            });
         }
 
-        if (user.otp.code === otp && user.otp.expiresAt > Date.now()) {
+        // Check if OTP exists
+        if (!user.otp || !user.otp.code) {
+            return res.status(400).json({ message: 'No OTP found. Please register again.' });
+        }
+
+        if (user.otp.code.toString() === otp.toString() && user.otp.expiresAt > Date.now()) {
             user.isVerified = true;
             user.otp = undefined; // Clear OTP
 
-            // Generate token implicitly for auto-login or ask to login
+            // Generate token implicitly for auto-login
             const token = generateToken(user._id);
             user.sessionToken = token; // Set session for single device
             await user.save();
 
-            res.clearCookie('token'); // Clear any old cookies
+            res.clearCookie('token');
 
             res.json({
                 _id: user._id,
@@ -100,6 +117,7 @@ const verifyOTP = async (req, res) => {
         }
 
     } catch (error) {
+        console.error("Verify OTP Error:", error);
         res.status(500).json({ message: error.message });
     }
 }

@@ -25,6 +25,11 @@ const sendEmail = async (options) => {
         console.log(`Email sent: ${info.messageId}`);
         return info;
     } catch (error) {
+        if (process.env.NODE_ENV === 'development') {
+            console.warn(`[DEV] Email failed to send (expected without valid creds). Message: ${error.message}`);
+            // Do not throw in dev, just return null or log
+            return null;
+        }
         console.error("Error sending email: ", error);
         throw new Error('Email could not be sent');
     }
