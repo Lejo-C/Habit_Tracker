@@ -1,28 +1,33 @@
 // App.jsx
 import './App.css'
-import Home from "./Pages/home"
-
-// ✅ Import Router components
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Nav from "./Pages/Nav"
+import Dashboard from "./Pages/Dashboard"
+import Habits from "./Pages/Habits"
+import Analysis from "./Pages/Analysis"
+import Friends from "./Pages/Friends"
+import Profile from "./Pages/Profile"
+// import Home from "./Pages/home" // Keeping if needed, but likely replacing with Dashboard as default
 
 function App() {
   return (
     <Router>
-
-     <nav className="text-white flex items-center bg-black p-4">
-  <h1 className="font-bold mr-auto">Habit Tracker</h1>
-
-  <div className="flex flex-1 justify-center gap-4">
-    <a href="/" className="hover:text-blue-400">Home</a>
-    <a href="/about" className="hover:text-blue-400">About</a>
-  </div>
-</nav>
-
-      <Routes>
-        <Route path="/" element={<Home />} />
-      </Routes>
+      <div className="flex min-h-screen bg-[#0D0D0D] text-white font-['Outfit']">
+        <Nav />
+        <div className="ml-64 w-full p-4">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/habits" element={<Habits />} />
+            <Route path="/analysis" element={<Analysis />} />
+            <Route path="/friends" element={<Friends />} />
+            <Route path="/profile" element={<Profile />} />
+          </Routes>
+        </div>
+      </div>
     </Router>
   )
 }
 
 export default App
+
